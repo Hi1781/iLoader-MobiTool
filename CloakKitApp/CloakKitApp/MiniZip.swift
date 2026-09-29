@@ -108,17 +108,17 @@ struct MiniZip {
         var reader = BitReader(bytes: [UInt8](data))
 
         var codeLengths = Array(repeating: 0, count: 288)
-        codeLengths[0...143] = Array(repeating: 8, count: 144)
-        codeLengths[144...255] = Array(repeating: 9, count: 112)
-        codeLengths[256...279] = Array(repeating: 7, count: 24)
-        codeLengths[280...287] = Array(repeating: 8, count: 8)
+        codeLengths.replaceSubrange(0...143, with: Array(repeating: 8, count: 144))
+        codeLengths.replaceSubrange(144...255, with: Array(repeating: 9, count: 112))
+        codeLengths.replaceSubrange(256...279, with: Array(repeating: 7, count: 24))
+        codeLengths.replaceSubrange(280...287, with: Array(repeating: 8, count: 8))
         let litTable = HuffmanTable(codeLengths)
 
         var distLengths = Array(repeating: 5, count: 32)
         let distTable = HuffmanTable(distLengths)
 
         loop: while true {
-            guard let bfinal = try? reader.readBits(1), bfinal != nil else { throw ZipError.badData }
+            guard let bfinal = try reader.readBits(1) else { throw ZipError.badData }
             guard let btype = try reader.readBits(2) else { throw ZipError.badData }
             switch btype {
             case 0:
@@ -144,9 +144,10 @@ struct MiniZip {
                     if let v = try reader.readBits(3) { clenLens[order[i]] = Int(v) }
                 }
                 let clenTable = HuffmanTable(clenLens)
+                var clenTableVar = clenTable
                 var lens = [Int]()
                 while lens.count < hlit + hdist {
-                    guard let sym = try reader.readHuff(&clenTable) else { throw ZipError.badData }
+                    guard let sym = try reader.readHuff(&clenTableVar) else { throw ZipError.badData }
                     if sym < 16 { lens.append(sym) }
                     else if sym == 16 {
                         guard let prev = lens.last else { throw ZipError.badData }
@@ -245,7 +246,7 @@ struct MiniZip {
             var code: UInt16 = 0
             for bits in 1...15 {
                 guard let b = try? reader.readBits(1) else { return nil }
-                code = (code << 1) | UInt16(b!)
+                code = (code << 1) | UInt16(b)
                 if let sym = codes[code] { return sym }
             }
             return nil

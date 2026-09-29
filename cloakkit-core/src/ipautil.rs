@@ -119,11 +119,12 @@ mod tests {
     }
 
     #[test]
-    fn verify_unsiged_reports_no_cd() {
+    fn reference_ipa_has_adhoc_codirectory() {
         let (meta, cd) = verify_ipa(&test_ipa()).unwrap();
         assert_eq!(meta.bundle_id, "com.clipboard.history");
-        // raw-unsigned → 无 CodeDirectory
-        assert!(cd.is_none());
+        // 参考 IPA 经输出链 -adhoc_codesign 嵌入签名，内核应能解析出 CodeDirectory 的 cdHash
+        let cd = cd.expect("reference binary has an ad-hoc CodeDirectory");
+        assert_eq!(cd.len(), 32);
     }
 }
 

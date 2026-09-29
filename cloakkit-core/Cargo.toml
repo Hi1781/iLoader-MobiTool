@@ -6,7 +6,7 @@ description = "CloakKit iOS 侧载安装器核心：Anisette + Apple ID 登录/2
 
 [lib]
 name = "cloakkit_core"
-crate-type = ["staticlib", "cdylib"]
+crate-type = ["staticlib"]
 
 [dependencies]
 icloud_auth = { path = "../apple-private-apis/icloud-auth" }

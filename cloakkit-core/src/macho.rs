@@ -130,9 +130,10 @@ pub fn verify_code_signature(bin: &[u8]) -> Result<[u8; 32], String> {
     if sb_magic != CS_SUPERBLOB_MAGIC {
         return Err(format!("bad superblob magic 0x{:08x}", sb_magic));
     }
-    let count = u32::from_be_bytes(sig[4..8].try_into().unwrap());
+    // CSSuperblob 头为 12 字节：magic(4) + length(4) + count(4)，索引自 12 起
+    let count = u32::from_be_bytes(sig[8..12].try_into().unwrap());
     for i in 0..count as usize {
-        let b = 8 + i * 8;
+        let b = 12 + i * 8;
         if b + 8 > sig.len() {
             return Err("superblob index out of bounds".into());
         }
@@ -201,22 +202,35 @@ mod tests {
     }
 
     #[test]
-    fn unsigned_binary_reports_missing_signature() {
-        // 参考 IPA 是 raw-unsigned：主二进制无 LC_CODE_SIGNATURE
+    fn adhoc_signed_reference_has_codirectory() {
+        // 参考 IPA 经输出链 -adhoc_codesign 嵌入签名槽，内核应解析出 CodeDirectory 的 cdHash
         let data = std::fs::read(
             concat!(env!("CARGO_MANIFEST_DIR"), "/testdata/reference-unsigned.ipa"),
         )
         .unwrap();
         let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&data)).unwrap();
-        let names: Vec<String> = zip.file_names().map(|s| s.to_string()).collect();
-        let _info = names.iter().find(|n| n.ends_with(".app/Info.plist")).unwrap().clone();
         let exec = "Payload/ClipboardHistory.app/ClipboardHistory";
         let mut f = zip.by_name(exec).unwrap();
         let mut buf = Vec::new();
         std::io::Read::read_to_end(&mut f, &mut buf).unwrap();
         assert_eq!(parse_header(&buf).unwrap().arch, "arm64");
-        // 未签名 → verify_code_signature 应返回 Err（"not found" 或结构错误）
-        assert!(verify_code_signature(&buf).is_err());
+        let cd = verify_code_signature(&buf).expect("reference has ad-hoc CodeDirectory");
+        assert_eq!(cd.len(), 32);
+    }
+
+    #[test]
+    fn truly_unsigned_binary_reports_missing_signature() {
+        // 构造一个无 LC_CODE_SIGNATURE 的最小 arm64 Mach-O（仅头部），应报缺失签名
+        let mut bin = Vec::new();
+        bin.extend_from_slice(&0xfeed_facfu32.to_le_bytes()); // magic
+        bin.extend_from_slice(&0x0100_000cu32.to_le_bytes()); // cputype arm64
+        bin.extend_from_slice(&0x0u32.to_le_bytes()); // cpusubtype
+        bin.extend_from_slice(&2u32.to_le_bytes()); // filetype MH_EXECUTE
+        bin.extend_from_slice(&0u32.to_le_bytes()); // ncmds
+        bin.extend_from_slice(&0u32.to_le_bytes()); // sizeofcmds
+        bin.extend_from_slice(&0u32.to_le_bytes()); // flags
+        bin.extend_from_slice(&0u32.to_le_bytes()); // reserved
+        assert!(verify_code_signature(&bin).is_err());
     }
 }
 
