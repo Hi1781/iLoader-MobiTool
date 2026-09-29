@@ -1,7 +1,15 @@
-# CloakKit (v1.0.0)
+# CloakKit (v1.1.0)
 
 iOS（iPhone/iPad）本地 IPA 侧载安装器，复用 **SideStore** 的无线调试 + JIT 授权通道，
 在手机端直接完成 Apple ID 登录、Anisette、IPA 解析、签名与安装，替代电脑端 iLoader。
+
+## v2 新增（本版本）
+- 适配 **iPhone + iPad**（`TARGETED_DEVICE_FAMILY=1,2`，自适应 TabView 布局）。
+- 新增 **IPA/Mach-O/CodeSignature 校验内核**（Rust `macho.rs` + `ipautil.rs`，已通过本机对真实 IPA 的端到端测试）：
+  - 提取 Info.plist、主二进制架构；
+  - Mach-O 头一致性 + 加载命令越界守卫；
+  - `LC_CODE_SIGNATURE` 定位、CodeDirectory 结构校验 + 计算其 SHA-256（cdHash）。
+- 新增 FFI：`ck_probe_ipa` / `ck_verify_binary`，Swift 侧 `InstallView` 导入后自动校验并在界面显示 CodeDirectory 状态。
 
 ## 架构
 

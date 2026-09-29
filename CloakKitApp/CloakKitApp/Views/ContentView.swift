@@ -94,7 +94,8 @@ struct InstallView: View {
                 if case .success(let urls) = res, let url = urls.first {
                     if let m = try? IPAParser.parse(at: url) {
                         meta = m
-                        resultText = "IPA 解析成功"
+                        resultText = "IPA 解析成功，正在校验二进制…"
+                        verifyIPA(url)
                     } else {
                         resultText = "IPA 解析失败：文件可能损坏"
                     }
@@ -115,6 +116,22 @@ struct InstallView: View {
                 case .success: resultText = "安装完成（校验通过；真实 installd 安装需链接 libimobiledevice，见 README 第 6 步）"
                 case .failure(let e): resultText = "安装失败：\(e.localizedDescription)"
                 }
+            }
+        }
+    }
+
+    private func verifyIPA(_ url: URL) {
+        // v2：Mach-O + CodeDirectory 结构级校验（Rust 内核）
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                let v = try FFIBridge.shared.verifyBinary(inIPA: url)
+                DispatchQueue.main.async {
+                    resultText = "Mach-O 架构: \(v.archs.joined(separator: ", "))\n"
+                        + "CodeDirectory SHA-256: \(v.codeDirectorySHA256)\n"
+                        + (v.verified ? "签名结构校验通过" : "未签名（SideStore 将在签名时生成 CodeDirectory）")
+                }
+            } catch {
+                DispatchQueue.main.async { resultText = "校验失败：\(error.localizedDescription)" }
             }
         }
     }

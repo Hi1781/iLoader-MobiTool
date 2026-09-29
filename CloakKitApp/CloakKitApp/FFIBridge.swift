@@ -86,4 +86,52 @@ final class FFIBridge {
     func logout() {
         ck_logout()
     }
+
+    // MARK: - v2 校验接口
+
+    struct IPAVerifyResult {
+        let bundleID: String
+        let archs: [String]
+        let codeDirectorySHA256: String
+        let verified: Bool
+    }
+
+    /// 探测 IPA 元信息 + 架构
+    func probeIPA(at url: URL) throws -> [String: String] {
+        var out: UnsafeMutablePointer<CChar>? = nil
+        let rc = url.path.withCString { ck_probe_ipa($0, &out) }
+        guard rc == 0, let ptr = out else {
+            throw NSError(domain: "CloakKit", code: Int(rc), userInfo: [NSLocalizedDescriptionKey: lastError])
+        }
+        defer { ck_free_string(ptr) }
+        let json = String(cString: ptr)
+        guard let data = json.data(using: .utf8),
+              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw NSError(domain: "CloakKit", code: 1, userInfo: [NSLocalizedDescriptionKey: "探测结果解析失败"])
+        }
+        var flat: [String: String] = [:]
+        for (k, v) in obj { flat[k] = "\(v)" }
+        return flat
+    }
+
+    /// 校验主二进制 Mach-O + CodeDirectory
+    func verifyBinary(inIPA url: URL) throws -> IPAVerifyResult {
+        var out: UnsafeMutablePointer<CChar>? = nil
+        let rc = url.path.withCString { ck_verify_binary($0, &out) }
+        guard rc == 0, let ptr = out else {
+            throw NSError(domain: "CloakKit", code: Int(rc), userInfo: [NSLocalizedDescriptionKey: lastError])
+        }
+        defer { ck_free_string(ptr) }
+        let json = String(cString: ptr)
+        guard let data = json.data(using: .utf8),
+              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw NSError(domain: "CloakKit", code: 1, userInfo: [NSLocalizedDescriptionKey: "校验结果解析失败"])
+        }
+        return IPAVerifyResult(
+            bundleID: obj["bundle_id"] as? String ?? "",
+            archs: (obj["archs"] as? [String]) ?? [],
+            codeDirectorySHA256: obj["code_directory_sha256"] as? String ?? "none",
+            verified: obj["verified"] as? Bool ?? false
+        )
+    }
 }

@@ -41,6 +41,12 @@ int ck_send_sms(unsigned int phone_id);
 // 注销会话
 int ck_logout(void);
 
+// ===== v2：IPA / Mach-O / CodeSignature 校验 =====
+// 探测 IPA 元信息 + 主二进制架构。out 为 malloc 字符串(JSON)，调用方用 ck_free_string 释放。
+int ck_probe_ipa(const char* ipa_path, char** out);
+// 校验主二进制 Mach-O + CodeDirectory（输出 code_directory_sha256）。
+int ck_verify_binary(const char* ipa_path, char** out);
+
 #ifdef __cplusplus
 }
 #endif
