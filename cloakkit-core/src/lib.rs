@@ -48,14 +48,26 @@ fn login_state_code(state: &LoginState) -> i32 {
     }
 }
 
-/// 构造 Anisette 配置：优先使用调用方传入的 anisette_url，为空则用默认远程服务器
+/// 构造 Anisette 配置：优先使用调用方传入的 anisette_url，为空则用默认远程服务器。
+/// iLoader 预设服务器均为裸主机名，需补 https://；v3 协议为侧载的标准协议。
 fn build_config(anisette_url: Option<&str>) -> AnisetteConfiguration {
     let mut c = AnisetteConfiguration::new();
     if let Some(url) = anisette_url {
         if !url.is_empty() {
-            c = c.set_anisette_url(url.to_string());
+            let url = url.trim();
+            let full = if url.starts_with("http://") || url.starts_with("https://") {
+                url.to_string()
+            } else {
+                format!("https://{}", url)
+            };
+            // v3 与 v1 均指向所选服务器（v3 为侧载主协议）
+            c = c.set_anisette_url_v3(full.clone()).set_anisette_url(full);
         }
     }
+    // v3 需写入 state.plist，给一个沙箱可写目录
+    let cfg_dir = std::env::temp_dir().join("cloakkit_anisette");
+    let _ = std::fs::create_dir_all(&cfg_dir);
+    c = c.set_configuration_path(cfg_dir);
     c
 }
 
@@ -68,7 +80,7 @@ fn get_handle() -> Option<std::sync::MutexGuard<'static, Option<CkSession>>> {
 /// 版本号（静态字符串指针）
 #[no_mangle]
 pub extern "C" fn ck_version() -> *const c_char {
-    static V: &[u8] = b"1.2.0\0";
+    static V: &[u8] = b"1.3.0\0";
     V.as_ptr() as *const c_char
 }
 

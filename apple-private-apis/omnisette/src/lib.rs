@@ -102,6 +102,12 @@ impl AnisetteConfiguration {
         self
     }
 
+    /// CloakKit 新增：设置 v3 远程 anisette 服务器 URL（iLoader 服务器均为 v3 协议）
+    pub fn set_anisette_url_v3(mut self, anisette_url_v3: String) -> AnisetteConfiguration {
+        self.anisette_url_v3 = anisette_url_v3;
+        self
+    }
+
     pub fn set_macos_serial(mut self, macos_serial: String) -> AnisetteConfiguration {
         self.macos_serial = macos_serial;
         self
@@ -143,11 +149,16 @@ impl AnisetteHeaders {
     pub fn get_anisette_headers_provider(
         configuration: AnisetteConfiguration,
     ) -> Result<AnisetteHeadersProviderRes, AnisetteError> {
-        // ---- CloakKit 修复：优先使用远程 anisette，避免本地 AOSKit/SSc 的系统文件访问 ----
+        // ---- CloakKit 修复：优先使用远程 anisette（v3 协议），对齐 iLoader/SideStore 服务器 ----
         // 本地 AOSKit 依赖系统私有框架读系统 plist：沙箱 macOS 会报 Operation not permitted(EPERM)，
-        // iOS 侧则完全不可用。故只要配置了远程服务器就优先走远程；未显式配置时回落到 v3 默认服务器。
+        // iOS 侧则完全不可用。iLoader 的预设服务器全部是 v3 协议，故：
+        //   1) 配置了自定义 v3 URL → 走该服务器
+        //   2) 否则走默认 v3 服务器（ani.sidestore.io）
+        //   3) 只有 v3 不可用时才回落到 v1 / 本地
+        // 仅当调用方显式设置了一个非默认的 v1 URL 时才优先 v1（兼容旧自定义 v1 服务器）。
         let explicit_v1 = !configuration.anisette_url.is_empty()
-            && configuration.anisette_url != DEFAULT_ANISETTE_URL;
+            && configuration.anisette_url != DEFAULT_ANISETTE_URL
+            && configuration.anisette_url_v3 == DEFAULT_ANISETTE_URL_V3;
 
         #[cfg(feature = "remote-anisette")]
         if explicit_v1 {
