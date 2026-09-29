@@ -143,6 +143,30 @@ impl AnisetteHeaders {
     pub fn get_anisette_headers_provider(
         configuration: AnisetteConfiguration,
     ) -> Result<AnisetteHeadersProviderRes, AnisetteError> {
+        // ---- CloakKit 修复：优先使用远程 anisette，避免本地 AOSKit/SSc 的系统文件访问 ----
+        // 本地 AOSKit 依赖系统私有框架读系统 plist：沙箱 macOS 会报 Operation not permitted(EPERM)，
+        // iOS 侧则完全不可用。故只要配置了远程服务器就优先走远程；未显式配置时回落到 v3 默认服务器。
+        let explicit_v1 = !configuration.anisette_url.is_empty()
+            && configuration.anisette_url != DEFAULT_ANISETTE_URL;
+
+        #[cfg(feature = "remote-anisette")]
+        if explicit_v1 {
+            return Ok(AnisetteHeadersProviderRes::remote(Box::new(
+                remote_anisette::RemoteAnisetteProvider::new(configuration.anisette_url.clone()),
+            )));
+        }
+
+        #[cfg(feature = "remote-anisette-v3")]
+        if !explicit_v1 {
+            return Ok(AnisetteHeadersProviderRes::remote(Box::new(
+                remote_anisette_v3::RemoteAnisetteProviderV3::new(
+                    configuration.anisette_url_v3.clone(),
+                    configuration.configuration_path.clone(),
+                    configuration.macos_serial.clone(),
+                ),
+            )));
+        }
+
         #[cfg(target_os = "macos")]
         if let Ok(prov) = aos_kit::AOSKitAnisetteProvider::new() {
             return Ok(AnisetteHeadersProviderRes::local(Box::new(prov)));

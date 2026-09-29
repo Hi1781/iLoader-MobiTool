@@ -23,7 +23,7 @@ struct CkSession {
 static SESSION: Mutex<Option<CkSession>> = Mutex::new(None);
 static LAST_ERROR: Mutex<Option<CString>> = Mutex::new(None);
 
-const VERSION: &str = "1.1.0";
+
 static EMPTY_C: &[u8] = b"\0";
 
 // ---------- 工具 ----------
@@ -68,7 +68,7 @@ fn get_handle() -> Option<std::sync::MutexGuard<'static, Option<CkSession>>> {
 /// 版本号（静态字符串指针）
 #[no_mangle]
 pub extern "C" fn ck_version() -> *const c_char {
-    static V: &[u8] = b"1.1.0\0";
+    static V: &[u8] = b"1.2.0\0";
     V.as_ptr() as *const c_char
 }
 

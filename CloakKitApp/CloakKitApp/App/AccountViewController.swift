@@ -42,9 +42,9 @@ final class AccountViewController: UIViewController {
         stack.spacing = 12
         stack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(stack)
+        // iPad 适配：可读宽度（≤520）居中；iPhone 保持满宽
+        ReadableWidth.pin(stack, in: view)
         NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             stack.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])
     }
