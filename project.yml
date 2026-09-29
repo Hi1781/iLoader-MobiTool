@@ -1,0 +1,47 @@
+# CloakKit — XcodeGen 工程描述
+# 用法（macOS）：xcodegen generate   （需先装 XcodeGen：brew install xcodegen）
+name: CloakKit
+options:
+  bundleIdPrefix: io.cloakkit
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+configs:
+  Debug: debug
+  Release: release
+settings:
+  base:
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "1,2"     # iPhone + iPad
+    SWIFT_OBJC_BRIDGING_HEADER: CloakKitApp-Bridging-Header.h
+    HEADER_SEARCH_PATHS: ["$(SRCROOT)/CloakKitApp/include"]
+    OTHER_LDFLAGS: ["$(inherited)", "-lcloakkit_core", "-L$(SRCROOT)/CloakKitApp/lib"]
+targets:
+  CloakKitApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: CloakKitApp
+      - path: CloakKitApp/include
+        buildPhase: headers
+    info:
+      path: CloakKitApp/Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.cloakkit.app
+        INFOPLIST_FILE: CloakKitApp/Info.plist
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+    preBuildScripts:
+      - name: Build Rust Core (aarch64-apple-ios)
+        script: |
+          # 交叉编译 CloakKit 内核为 iOS arm64 静态库
+          export PATH="$HOME/.cargo/bin:$PATH"
+          cd "$SRCROOT/.."
+          cargo build --manifest-path cloakkit-core/Cargo.toml \
+            --target aarch64-apple-ios --release
+          mkdir -p "$SRCROOT/CloakKitApp/lib"
+          cp "$SRCROOT/../cloakkit-core/target/aarch64-apple-ios/release/libcloakkit_core.a" \
+             "$SRCROOT/CloakKitApp/lib/"
+        basedOnDependencyAnalysis: false
