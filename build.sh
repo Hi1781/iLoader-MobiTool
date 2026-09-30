@@ -42,5 +42,5 @@ cd build && zip -qr CloakKit-unsigned.ipa Payload && cd ..
 rm -rf build/Payload
 
 echo "▶ [5/5] 完成"
-echo "  产物：build/CloakKit-unsigned-v1.3.0.ipa"
+echo "  产物：build/CloakKit-unsigned-v1.4.0.ipa"
 echo "  下一步：用 SideStore 导入该 IPA，以你的 Apple ID 签名安装即可。"

@@ -169,8 +169,15 @@ pub struct AuthenticationExtras {
 // }
 
 async fn parse_response(res: Result<Response, reqwest::Error>) -> Result<plist::Dictionary, crate::Error> {
-    let res = res?.text().await?;
-    let res: plist::Dictionary = plist::from_bytes(res.as_bytes())?;
+    let res = res?;
+    let status = res.status();
+    let text = res.text().await?;
+    let trimmed = text.trim_start();
+    // Apple 偶发返回 HTML 错误页（风控/受限/限流）而非 plist：给出清晰提示，而非晦涩的 plist 解析错误
+    if trimmed.starts_with('<') {
+        return Err(crate::Error::AppleHtml(status.as_u16(), text.chars().take(160).collect()));
+    }
+    let res: plist::Dictionary = plist::from_bytes(text.as_bytes())?;
     let res: plist::Value = res.get("Response").unwrap().to_owned();
     match res {
         plist::Value::Dictionary(dict) => Ok(dict),

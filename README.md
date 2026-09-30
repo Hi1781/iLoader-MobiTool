@@ -1,4 +1,4 @@
-# CloakKit (v1.3.0)
+# CloakKit (v1.4.0)
 
 iOS（iPhone/iPad）本地 IPA 侧载安装器，复用 **SideStore** 的无线调试 + JIT 授权通道，
 在手机端直接完成 Apple ID 登录、Anisette、IPA 解析、签名与安装，替代电脑端 iLoader。

@@ -22,7 +22,7 @@ set -euo pipefail
 
 APP_NAME="CloakKit"
 BUNDLE_ID="com.hi1781.cloakkit"
-MARK_VER="1.3.0"; CUR_VER="4"
+MARK_VER="1.4.0"; CUR_VER="5"
 DEPLOY="16.0"; SDK_VER="16.4"
 TARGET="arm64-apple-ios${DEPLOY}"
 ROOT="$(cd "$(dirname "$0")" && pwd)"

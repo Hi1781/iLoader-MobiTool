@@ -12,12 +12,21 @@ final class AccountViewController: UIViewController {
     private let statusLabel = UILabel()
     private let actionButton = UIButton(type: .system)
     private var awaiting2FA = false
+    private var widthCap: NSLayoutConstraint?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         buildUI()
         refreshServerDisplay()
+    }
+
+    /// 窗口/画布尺寸或尺寸类变化时，刷新可读宽度上限（iPad 全屏↔分屏、macOS 拉伸窗口）
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if previousTraitCollection?.horizontalSizeClass != traitCollection.horizontalSizeClass {
+            widthCap?.constant = ReadableWidth.maxReadableWidth(for: traitCollection)
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -81,7 +90,7 @@ final class AccountViewController: UIViewController {
         stack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(stack)
         // iPad 适配：可读宽度（≤520）居中；iPhone 保持满宽
-        ReadableWidth.pin(stack, in: view)
+        widthCap = ReadableWidth.pin(stack, in: view)
         NSLayoutConstraint.activate([
             stack.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])

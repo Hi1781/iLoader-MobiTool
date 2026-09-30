@@ -9,11 +9,20 @@ final class InstallViewController: UIViewController, UIDocumentPickerDelegate {
     private let verifyButton = UIButton(type: .system)
     private let installButton = UIButton(type: .system)
     private var currentURL: URL?
+    private var widthCap: NSLayoutConstraint?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         buildUI()
+    }
+
+    /// 窗口/画布尺寸或尺寸类变化时，刷新可读宽度上限（iPad 全屏↔分屏、macOS 拉伸窗口）
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if previousTraitCollection?.horizontalSizeClass != traitCollection.horizontalSizeClass {
+            widthCap?.constant = ReadableWidth.maxReadableWidth(for: traitCollection)
+        }
     }
 
     private func buildUI() {
@@ -44,7 +53,7 @@ final class InstallViewController: UIViewController, UIDocumentPickerDelegate {
         stack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(stack)
         // iPad 适配：可读宽度（≤520）居中；iPhone 保持满宽
-        ReadableWidth.pin(stack, in: view)
+        widthCap = ReadableWidth.pin(stack, in: view)
         NSLayoutConstraint.activate([
             stack.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])

@@ -20,6 +20,8 @@ pub enum Error {
     ExtraStep(String),
     #[error("Failed to parse a plist {0}")]
     PlistError(#[from] plist::Error),
+    #[error("Apple 返回了网页（HTTP {0}），多为账号被风控/受限、请求被拒或限流。请稍后再试，或更换网络/Apple ID：{1}")]
+    AppleHtml(u16, String),
     #[error("Request failed {0}")]
     ReqwestError(#[from] reqwest::Error),
     #[error("Failed getting anisette data {0}")]
