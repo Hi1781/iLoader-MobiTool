@@ -201,7 +201,7 @@ dependencies = [
 
 [[package]]
 name = "cloakkit-core"
-version = "1.4.0"
+version = "1.4.1"
 dependencies = [
  "hex",
  "icloud_auth",

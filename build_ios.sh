@@ -22,7 +22,7 @@ set -euo pipefail
 
 APP_NAME="CloakKit"
 BUNDLE_ID="com.hi1781.cloakkit"
-MARK_VER="1.4.0"; CUR_VER="5"
+MARK_VER="1.4.1"; CUR_VER="6"
 DEPLOY="16.0"; SDK_VER="16.4"
 TARGET="arm64-apple-ios${DEPLOY}"
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -140,11 +140,12 @@ cat > "${BUILD}/Info.plist.tmpl" <<PLIST
 	<key>CFBundlePackageType</key><string>APPL</string>
 	<key>CFBundleShortVersionString</key><string>\$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key><string>\$(CURRENT_PROJECT_VERSION)</string>
-	<key>LSRequiresIPhoneOS</key><true/>
+	<key>LSRequiresIPhoneOS</key><false/>
+	<key>UIRequiresFullScreen</key><false/>
 	<key>UILaunchScreen</key><dict/>
 	<key>UIRequiredDeviceCapabilities</key><array><string>arm64</string></array>
 	<key>UISupportedInterfaceOrientations</key>
-	<array><string>UIInterfaceOrientationPortrait</string></array>
+	<array><string>UIInterfaceOrientationPortrait</string><string>UIInterfaceOrientationLandscapeLeft</string><string>UIInterfaceOrientationLandscapeRight</string></array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

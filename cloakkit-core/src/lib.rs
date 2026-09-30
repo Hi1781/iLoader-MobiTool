@@ -80,7 +80,7 @@ fn get_handle() -> Option<std::sync::MutexGuard<'static, Option<CkSession>>> {
 /// 版本号（静态字符串指针）
 #[no_mangle]
 pub extern "C" fn ck_version() -> *const c_char {
-    static V: &[u8] = b"1.4.0\0";
+    static V: &[u8] = b"1.4.1\0";
     V.as_ptr() as *const c_char
 }
 
