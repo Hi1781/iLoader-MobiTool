@@ -1,6 +1,6 @@
 [package]
 name = "cloakkit-core"
-version = "1.4.1"
+version = "2.0.0"
 edition = "2021"
 description = "CloakKit iOS 侧载安装器核心：Anisette + Apple ID 登录/2FA + 应用令牌，C FFI 供 Swift 桥接"
 
@@ -17,5 +17,15 @@ zip = { version = "0.6", default-features = false, features = ["deflate"] }
 sha2 = "0.10"
 hex = "0.4"
 serde_json = "1.0"
+serde = { version = "1", features = ["derive"] }
+
+# SideStore 式远程安装（jkcoxson/idevice-rs）：remote_pairing + CoreDeviceProxy
+# software tunnel(jktcp 用户态栈, 无需 Network Extension entitlement) + installation_proxy
+idevice = { version = "0.1.68", default-features = false, features = [
+  "rustls", "ring", "usbmuxd", "tcp",
+  "core_device", "core_device_proxy", "remote_pairing", "installation_proxy",
+  "mobile_image_mounter", "misagent", "afc", "house_arrest", "rsd", "xpc",
+  "tss", "amfi", "dvt", "application_listing", "tunnel_tcp_stack",
+] }
 
 # 交叉编译目标：aarch64-apple-ios（真机 arm64）

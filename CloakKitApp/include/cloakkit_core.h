@@ -47,6 +47,35 @@ int ck_probe_ipa(const char* ipa_path, char** out);
 // 校验主二进制 Mach-O + CodeDirectory（输出 code_directory_sha256）。
 int ck_verify_binary(const char* ipa_path, char** out);
 
+// ===== v2.0：SideStore 式远程安装（RemotePairing / CoreDeviceProxy software tunnel）=====
+// 导入 .mobiledevicepairing 配对记录并设置目标设备局域网 IP。0 成功。
+int ck_pairing_import(const char* path, const char* ip);
+// 是否已导入配对（1/0）。
+int ck_pairing_present(void);
+// 配对元信息 JSON（{udid,hostId,systemBuid,wifiMac,ip}），NULL 表示未导入。
+char* ck_pairing_info(void);
+// 更新目标设备 IP（手动输入/发现后）。0 成功。
+int ck_device_set_ip(const char* ip);
+// 经无线 Lockdown 读取设备信息 JSON（{name,udid,productType,osVersion,model}），NULL 失败。
+char* ck_device_fetch_info(void);
+
+// 打开 CoreDeviceProxy software tunnel（无需 Network Extension entitlement）。0 成功。
+int ck_tunnel_open(void);
+// 隧道状态 JSON（{open,clientIp,serverIp,rsdPort}）。
+char* ck_tunnel_status(void);
+// 关闭隧道。
+int ck_tunnel_close(void);
+
+// 经隧道列出目标设备已装应用，JSON 数组（[{bundleId,name,displayName,version,path}]）。
+char* ck_apps_list(void);
+// 经隧道卸载指定 bundle id。0 成功。
+int ck_app_uninstall(const char* bundle_id);
+
+// 上传并安装本地 IPA。返回任务 id（>0，用 ck_install_progress 轮询）；<=0 启动失败。
+long long ck_install_ipa(const char* ipa_path);
+// 查询安装进度 JSON（{id,phase,percent,message,done,error}）。
+char* ck_install_progress(long long task_id);
+
 #ifdef __cplusplus
 }
 #endif

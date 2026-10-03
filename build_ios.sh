@@ -22,7 +22,7 @@ set -euo pipefail
 
 APP_NAME="CloakKit"
 BUNDLE_ID="com.hi1781.cloakkit"
-MARK_VER="1.4.1"; CUR_VER="6"
+MARK_VER="2.0.0"; CUR_VER="7"
 DEPLOY="16.0"; SDK_VER="16.4"
 TARGET="arm64-apple-ios${DEPLOY}"
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -169,6 +169,69 @@ cat > "${BUILD}/Info.plist.tmpl" <<PLIST
 			</array>
 		</dict>
 	</dict>
+
+	<!-- v2.0 SideStore 式远程安装：本地网络/Bonjour 发现 + 后台保活 + 文件类型 -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>CloakKit 需要本地网络权限，以发现并通过无线调试向同一局域网内的其他 iOS 设备安装应用。</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_remotepairing-pairable-host._tcp</string>
+		<string>_sideinstallerprobe._tcp</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array><string>audio</string><string>location</string></array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array><string>com.cloakkit.pairing</string></array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array><string>localdevvpn</string><string>sidestore</string></array>
+	<key>CFBundleURLTypes</key>
+	<array><dict>
+		<key>CFBundleURLName</key><string>com.cloakkit</string>
+		<key>CFBundleURLSchemes</key><array><string>cloakkit</string></array>
+	</dict></array>
+	<key>UIFileSharingEnabled</key><true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key><true/>
+	<key>UIDeviceFamily</key><array><integer>1</integer><integer>2</integer></array>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key><string>iOS Package Archive</string>
+			<key>CFBundleTypeRole</key><string>Editor</string>
+			<key>LSHandlerRank</key><string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array><string>com.apple.itunes.ipa</string><string>com.cloakkit.ipa</string></array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key><string>Device Pairing File</string>
+			<key>CFBundleTypeRole</key><string>Editor</string>
+			<key>LSHandlerRank</key><string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array><string>com.cloakkit.mobiledevicepairing</string></array>
+		</dict>
+	</array>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeIdentifier</key><string>com.cloakkit.ipa</string>
+			<key>UTTypeDescription</key><string>iOS Package Archive</string>
+			<key>UTTypeConformsTo</key>
+			<array><string>com.apple.itunes.ipa</string><string>public.data</string><string>public.content</string></array>
+			<key>UTTypeTagSpecification</key><dict>
+				<key>public.filename-extension</key><array><string>ipa</string></array>
+				<key>public.mime-type</key><array><string>application/octet-stream</string></array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeIdentifier</key><string>com.cloakkit.mobiledevicepairing</string>
+			<key>UTTypeDescription</key><string>Device Pairing File</string>
+			<key>UTTypeConformsTo</key>
+			<array><string>com.apple.property-list</string><string>public.data</string><string>public.content</string></array>
+			<key>UTTypeTagSpecification</key><dict>
+				<key>public.filename-extension</key><array><string>mobiledevicepairing</string></array>
+				<key>public.mime-type</key><array><string>application/x-plist</string></array>
+			</dict>
+		</dict>
+	</array>
 </dict></plist>
 PLIST
 sed -e "s/\\\$(EXECUTABLE_NAME)/CloakKit/g" -e "s/\\\$(PRODUCT_MODULE_NAME)/CloakKit/g" \
